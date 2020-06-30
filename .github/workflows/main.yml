@@ -56,6 +56,7 @@ jobs:
 
   envtest1:
     name: envtest1
+    runs-on: ubuntu-18.04
     steps:
       - shell: bash
         run: |
@@ -70,6 +71,7 @@ jobs:
   envtest2:
     name: envtest2
     needs: envtest1
+    runs-on: ubuntu-18.04
     steps:
       - name: blah 1
         run: echo ${{ env.DIST_DIR_NAME }}
@@ -93,6 +95,7 @@ jobs:
   distprep1:
     name: Prepare artifact for product of build1
     needs: build1
+    runs-on: ubuntu-18.04
     steps:
       - shell: bash
         run: |
@@ -111,6 +114,7 @@ jobs:
   upload1:
     name: Upload product of build1
     needs: distprep1
+    runs-on: ubuntu-18.04
     steps:
       - name: Upload
         uses: actions/upload-artifact@v2

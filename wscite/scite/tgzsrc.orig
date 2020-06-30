@@ -1,0 +1,6 @@
+cd ..
+rm -f scite.tgz
+rm -f scite/bin/*.properties
+tar --create --exclude-from=scite/.hgignore \
+	scintilla/* scite/* \
+	| gzip -c >scite.tgz

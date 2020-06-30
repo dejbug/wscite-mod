@@ -1,0 +1,8 @@
+scintilla/bin/*.a
+scintilla/bin/*.dll
+scintilla/lexilla/src/*.o
+scintilla/win32/*.o
+scite/bin/*.dll
+scite/bin/*.exe
+scite/bin/*.properties
+scite/win32/*.o

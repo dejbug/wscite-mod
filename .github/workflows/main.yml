@@ -32,10 +32,10 @@ jobs:
       - name: Install upx
         shell: bash
         run: |
-        #  curl -kLO https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz
-        #  sudo apt install xz-utils
-        #  tar -xf upx-3.96-amd64_linux.tar.xz
-        #  sudo cp upx /usr/bin
+          echo REM curl -kLO https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz
+          echo REM sudo apt install xz-utils
+          echo REM tar -xf upx-3.96-amd64_linux.tar.xz
+          echo REM sudo cp upx /usr/bin
           upx --version
       - name: Backup binaries to be replaced by MinGW (just in case)
         shell: bash
@@ -71,16 +71,16 @@ jobs:
       - name: Prepare artifact from build product
         shell: bash
         run: |
-        #  rm wscite/scite/bin/empty.txt
-        #  cp wscite/scite/doc/* wscite/scite/bin/
-        #  cp wscite/scite/License.txt wscite/scite/bin/
-        #  cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
-        #  mv wscite/scite/bin/* dist/*/wscite/
-        #  ls dist/*/wscite/
+          echo REM rm wscite/scite/bin/empty.txt
+          echo REM cp wscite/scite/doc/* wscite/scite/bin/
+          echo REM cp wscite/scite/License.txt wscite/scite/bin/
+          echo REM cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
+          echo REM mv wscite/scite/bin/* dist/*/wscite/
           cp wscite/scite/License.txt dist/*/wscite/
           cp wscite/scite/lua/COPYRIGHT dist/*/wscite/luaCOPYRIGHT
           cp wscite/scite/bin/Sc1.exe dist/*/wscite/
           cp wscite/scite/bin/*.properties dist/*/wscite/
+          ls dist/*/wscite/
       - name: Derive artifact name
         shell: bash
         run: |

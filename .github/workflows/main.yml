@@ -21,9 +21,18 @@ jobs:
           echo VERSION_SCITE: $VERSION_SCITE
           DIST_DIR_NAME=wscite32_${VERSION_SCITE}-mod
           echo DIST_DIR_NAME: $DIST_DIR_NAME
-          mkdir -p dist/$DIST_DIR_NAME/wscite
-          ls dist/
-          ls dist/*/
+          DIST_DIR_PATH=$GITHUB_WORKSPACE/dist/$DIST_DIR_NAME
+          echo DIST_DIR_PATH: $DIST_DIR_PATH
+          mkdir -p $DIST_DIR_PATH
+          echo "::set-env name=VERSION_SCITE::$VERSION_SCITE"
+          echo "::set-env name=DIST_DIR_NAME::$DIST_DIR_NAME"
+          echo "::set-env name=DIST_DIR_PATH::$DIST_DIR_PATH"
+      - name: Pre-populate dist folder (just in case)
+        shell: bash
+        run: |
+          cp wscite/scite/License.txt ${{ env.DIST_DIR_PATH }}/
+          cp wscite/scite/lua/COPYRIGHT ${{ env.DIST_DIR_PATH }}/luaCOPYRIGHT
+          ls -RAmp ${{ env.DIST_DIR_PATH }}/
       - name: Install MinGW and list its binaries
         shell: bash
         run: |
@@ -62,11 +71,11 @@ jobs:
           CROSS=i686-w64-mingw32-
           make -C wscite/scintilla/win32 CXX=${CROSS}c++-win32 WINDRES=${CROSS}windres AR=${CROSS}ar RANLIB=${CROSS}ranlib
           make -C wscite/scite/win32 CXX=${CROSS}c++-win32 CC=${CROSS}gcc-win32 WINDRES=${CROSS}windres
-          ls wscite/scite/bin/
+          ls -lA wscite/scite/bin/
       - name: Cut the crap (and they might not regret it)
         shell: bash
         run: |
-          strip wscite/scite/bin/Sc1.exe
+          strip -g wscite/scite/bin/Sc1.exe
           upx --brute wscite/scite/bin/Sc1.exe
       - name: Prepare artifact from build product
         shell: bash
@@ -75,21 +84,10 @@ jobs:
           echo REM cp wscite/scite/doc/* wscite/scite/bin/
           echo REM cp wscite/scite/License.txt wscite/scite/bin/
           echo REM cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
-          echo REM mv wscite/scite/bin/* dist/*/wscite/
-          cp wscite/scite/License.txt dist/*/wscite/
-          cp wscite/scite/lua/COPYRIGHT dist/*/wscite/luaCOPYRIGHT
-          cp wscite/scite/bin/Sc1.exe dist/*/wscite/
-          cp wscite/scite/bin/*.properties dist/*/wscite/
-          ls dist/*/wscite/
-      - name: Derive artifact name
-        shell: bash
-        run: |
-          DIST_DIR_NAME=`/bin/ls $GITHUB_WORKSPACE/dist/`
-          echo DIST_DIR_NAME: $DIST_DIR_NAME
-          DIST_DIR_PATH=$GITHUB_WORKSPACE/dist/$DIST_DIR_NAME
-          echo DIST_DIR_PATH: $DIST_DIR_PATH
-          echo "::set-env name=DIST_DIR_NAME::$DIST_DIR_NAME"
-          echo "::set-env name=DIST_DIR_PATH::$DIST_DIR_PATH"
+          echo REM mv wscite/scite/bin/* dist/*/
+          cp wscite/scite/bin/Sc1.exe ${{ env.DIST_DIR_PATH }}/
+          cp wscite/scite/bin/*.properties ${{ env.DIST_DIR_PATH }}/
+          ls -lA ${{ env.DIST_DIR_PATH }}/
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:

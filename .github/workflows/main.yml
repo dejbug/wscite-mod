@@ -36,7 +36,7 @@ jobs:
         #  sudo apt install xz-utils
         #  tar -xf upx-3.96-amd64_linux.tar.xz
         #  sudo cp upx /usr/bin
-        upx --version
+          upx --version
       - name: Backup binaries to be replaced by MinGW (just in case)
         shell: bash
         run: |
@@ -77,10 +77,10 @@ jobs:
         #  cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
         #  mv wscite/scite/bin/* dist/*/wscite/
         #  ls dist/*/wscite/
-        cp wscite/scite/License.txt dist/*/wscite/
-        cp wscite/scite/lua/COPYRIGHT dist/*/wscite/luaCOPYRIGHT
-        cp wscite/scite/bin/Sc1.exe dist/*/wscite/
-        cp wscite/scite/bin/*.properties dist/*/wscite/
+          cp wscite/scite/License.txt dist/*/wscite/
+          cp wscite/scite/lua/COPYRIGHT dist/*/wscite/luaCOPYRIGHT
+          cp wscite/scite/bin/Sc1.exe dist/*/wscite/
+          cp wscite/scite/bin/*.properties dist/*/wscite/
       - name: Derive artifact name
         shell: bash
         run: |

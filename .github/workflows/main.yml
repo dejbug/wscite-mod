@@ -23,9 +23,10 @@ jobs:
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE
-          VERSION_SCITE=`awk '/VERSION_SCITE/ { gsub(/[^0-9]/, "", $3); print $3 }' wscite/scite/src/SciTE.h`
+          ls .
+          VERSION_SCITE=`awk '/VERSION_SCITE/ { gsub(/[^0-9]/, "", $3); print $3 }' $GITHUB_WORKSPACE/wscite/scite/src/SciTE.h`
           DIST_DIR_NAME=wscite32_${VERSION_SCITE}-mod
-          mkdir -p dist/${DIST_DIR_NAME}/wscite
+          mkdir -p $GITHUB_WORKSPACE/dist/$DIST_DIR_NAME/wscite
 
   install:
     name: install

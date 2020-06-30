@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Print dir info
         run: |
-          echo pwd
-          echo ls -la
+          pwd
+          ls -la
       - name: See if mingw is installable
-        run: echo sudo apt-get search mingw
+        run: apt-get search mingw

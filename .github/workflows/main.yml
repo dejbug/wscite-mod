@@ -5,24 +5,115 @@ on:
     branches: [ actions ]
 
 jobs:
-  build:
-    # windows-latest or windows-2019
-    # ubuntu-20.04
-    # ubuntu-latest or ubuntu-18.04
-    # ubuntu-16.04
-    # macos-latest or macos-10.15
+  install:
+    name: Install mingw and list its binaries
     runs-on: ubuntu-18.04
-
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    # - uses: actions/checkout@v2
     steps:
-      - name: Install mingw
-        run: sudo apt-get install mingw-w64
-      - name: List mingw bins
-        run: ls -1 /usr/bin | grep -i mingw
-      - name: Get lay of the land
-        run: ls -RAmp /usr
-      - name: Check 1
-        run: which i686-w64-mingw32-c++
-      - name: Check 2
-        run: i686-w64-mingw32-c++ --version
+      - shell: bash
+        run: |
+          sudo apt-get install mingw-w64
+          ls -1 /usr/bin | grep -i mingw
+
+  build1:
+    name: build1 - Checkout via uses-action
+    needs: install
+    runs-on: ubuntu-18.04
+    - uses: actions/checkout@v2
+      with:
+        lfs: true
+    steps:
+      - shell: bash
+        run: |
+          echo $GITHUB_WORKSPACE
+          ls -la $GITHUB_WORKSPACE
+          echo "The LFS option should have worked."
+          du -sh $GITHUB_WORKSPACE
+          echo "We should be home."
+          pwd; ls -la
+          echo "Enter the workspace..."
+          cd $GITHUB_WORKSPACE
+          echo "... and because the docs are ambiguous here..."
+          cd wscite-mod
+          echo "Try a build."
+          make -C wscite/scintilla/win32 CXX=i686-w64-mingw32-c++-win32
+          make -C wscite/scite/win32 CXX=i686-w64-mingw32-c++-win32
+
+  build2:
+    name: build2 - Checkout via manual clone
+    needs: install
+    runs-on: ubuntu-18.04
+    steps:
+      - shell: bash
+        run: |
+          echo "We should be home."
+          pwd; ls -la; cd ~
+          echo "Make a separate working dir."
+          mkdir work2; cd work2
+          git lfs clone https://github.com/dejbug/wscite-mod
+          cd wscite-mod
+          make -C wscite/scintilla/win32 CXX=i686-w64-mingw32-c++-win32
+          make -C wscite/scite/win32 CXX=i686-w64-mingw32-c++-win32
+
+  envtest1:
+    name: envtest1
+    steps:
+      - shell: bash
+        run: |
+          VERSION_SCITE=443
+          echo "::set-env name=DIST_DIR_NAME::wscite32_$VERSION_SCITE"
+      - shell: bash
+        run: |
+          echo ${{ env.DIST_DIR_NAME }}
+          echo $VERSION_SCITE
+          echo $DIST_DIR_NAME
+
+  envtest2:
+    name: envtest2
+    needs: envtest1
+    steps:
+      - name: blah 1
+        run: echo ${{ env.DIST_DIR_NAME }}
+      - name: blah 2
+        run: echo $VERSION_SCITE
+      - name: blah 3
+        run: echo $DIST_DIR_NAME
+      - shell: bash
+        run: |
+          echo blah 4
+          echo ${{ env.DIST_DIR_NAME }}
+          echo $VERSION_SCITE
+          echo $DIST_DIR_NAME
+      - shell: bash
+        name: blah 5
+        run: |
+          echo ${{ env.DIST_DIR_NAME }}
+          echo $VERSION_SCITE
+          echo $DIST_DIR_NAME
+
+  distprep1:
+    name: Prepare artifact for product of build1
+    needs: build1
+    steps:
+      - shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE
+          cd wscite-mod
+          del wscite/scite/bin/empty.txt
+          cp wscite/scite/doc/* wscite/scite/bin/
+          cp wscite/scite/License.txt wscite/scite/bin/
+          cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
+          ls -la wscite/scite/bin
+          mkdir wscite32_443-mod
+          mv wscite/scite/bin wscite32_443-mod/
+          mv wscite32_443-mod/bin wscite32_443-mod/wscite
+          mv wscite32_443-mod ~/
+
+  upload1:
+    name: Upload product of build1
+    needs: distprep1
+    steps:
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: wscite32_443-mod
+          path: ~/wscite32_443-mod

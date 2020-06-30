@@ -11,14 +11,18 @@ jobs:
     # ubuntu-latest or ubuntu-18.04
     # ubuntu-16.04
     # macos-latest or macos-10.15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     # - uses: actions/checkout@v2
     steps:
-      - name: Print dir tree
-        run: sudo ls -RAmp /
-      - name: See if mingw is installable #1
-        run: which apt
-      - name: See if mingw is installable
-        run: sudo apt-cache search mingw
+      - name: Install mingw
+        run: sudo apt-get install mingw-w64
+      - name: List mingw bins
+        run: ls -1 /usr/bin | grep -i mingw
+      - name: Get lay of the land
+        run: ls -RAmp /usr
+      - name: Check 1
+        run: which i686-w64-mingw32-c++
+      - name: Check 2
+        run: [ -e /usr/bin/i686-w64-mingw32-c++ ] && i686-w64-mingw32-c++ --version

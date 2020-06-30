@@ -25,4 +25,4 @@ jobs:
       - name: Check 1
         run: which i686-w64-mingw32-c++
       - name: Check 2
-        run: [ -e /usr/bin/i686-w64-mingw32-c++ ] && i686-w64-mingw32-c++ --version
+        run: i686-w64-mingw32-c++ --version

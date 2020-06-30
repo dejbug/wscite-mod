@@ -5,119 +5,98 @@ on:
     branches: [ actions ]
 
 jobs:
-  install:
-    name: Install mingw and list its binaries
-    runs-on: ubuntu-18.04
-    steps:
-      - shell: bash
-        run: |
-          sudo apt-get install mingw-w64
-          ls -1 /usr/bin | grep -i mingw
 
-  build1:
-    name: build1 - Checkout via uses-action
-    needs: install
+  clone:
+    name: clone
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
         with:
           lfs: true
-      - shell: bash
-        run: |
-          echo $GITHUB_WORKSPACE
-          ls -la $GITHUB_WORKSPACE
-          echo "The LFS option should have worked."
-          du -sh $GITHUB_WORKSPACE
-          echo "We should be home."
-          pwd; ls -la
-          echo "Enter the workspace..."
-          cd $GITHUB_WORKSPACE
-          echo "... and because the docs are ambiguous here..."
-          cd wscite-mod
-          echo "Try a build."
-          make -C wscite/scintilla/win32 CXX=i686-w64-mingw32-c++-win32
-          make -C wscite/scite/win32 CXX=i686-w64-mingw32-c++-win32
-
-  build2:
-    name: build2 - Checkout via manual clone
-    needs: install
-    runs-on: ubuntu-18.04
-    steps:
-      - shell: bash
-        run: |
-          echo "We should be home."
-          pwd; ls -la; cd ~
-          echo "Make a separate working dir."
-          mkdir work2; cd work2
-          git lfs clone https://github.com/dejbug/wscite-mod
-          cd wscite-mod
-          make -C wscite/scintilla/win32 CXX=i686-w64-mingw32-c++-win32
-          make -C wscite/scite/win32 CXX=i686-w64-mingw32-c++-win32
-
-  envtest1:
-    name: envtest1
-    runs-on: ubuntu-18.04
-    steps:
-      - shell: bash
-        run: |
-          VERSION_SCITE=443
-          echo "::set-env name=DIST_DIR_NAME::wscite32_$VERSION_SCITE"
-      - shell: bash
-        run: |
-          echo ${{ env.DIST_DIR_NAME }}
-          echo $VERSION_SCITE
-          echo $DIST_DIR_NAME
-
-  envtest2:
-    name: envtest2
-    needs: envtest1
-    runs-on: ubuntu-18.04
-    steps:
-      - name: blah 1
-        run: echo ${{ env.DIST_DIR_NAME }}
-      - name: blah 2
-        run: echo $VERSION_SCITE
-      - name: blah 3
-        run: echo $DIST_DIR_NAME
-      - shell: bash
-        run: |
-          echo blah 4
-          echo ${{ env.DIST_DIR_NAME }}
-          echo $VERSION_SCITE
-          echo $DIST_DIR_NAME
-      - shell: bash
-        name: blah 5
-        run: |
-          echo ${{ env.DIST_DIR_NAME }}
-          echo $VERSION_SCITE
-          echo $DIST_DIR_NAME
 
   distprep1:
-    name: Prepare artifact for product of build1
-    needs: build1
+    name: distprep1
+    needs: clone
     runs-on: ubuntu-18.04
     steps:
-      - shell: bash
+      - name: Make dist folder from SciTE version
+        shell: bash
         run: |
           cd $GITHUB_WORKSPACE
-          cd wscite-mod
-          del wscite/scite/bin/empty.txt
-          cp wscite/scite/doc/* wscite/scite/bin/
-          cp wscite/scite/License.txt wscite/scite/bin/
-          cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
-          ls -la wscite/scite/bin
-          mkdir wscite32_443-mod
-          mv wscite/scite/bin wscite32_443-mod/
-          mv wscite32_443-mod/bin wscite32_443-mod/wscite
-          mv wscite32_443-mod ~/
+          VERSION_SCITE=`awk '/VERSION_SCITE/ { gsub(/[^0-9]/, "", $3); print $3 }' wscite/scite/src/SciTE.h`
+          DIST_DIR_NAME=wscite32_${VERSION_SCITE}-mod
+          mkdir -p dist/${DIST_DIR_NAME}/wscite
 
-  upload1:
-    name: Upload product of build1
+  install:
+    name: install
     needs: distprep1
     runs-on: ubuntu-18.04
     steps:
-      - name: Upload
+      - name: Install MinGW and list its binaries
+        shell: bash
+        run: |
+          sudo apt-get install mingw-w64
+          ls -1 /usr/bin | grep -i mingw
+      - name: Backup binaries to be replaced by MinGW
+        shell: bash
+        run: |
+          cd /usr/bin
+          sudo mv g++ MinGW-replaced-g++
+          sudo mv gcc MinGW-replaced-gcc
+          sudo mv ar MinGW-replaced-ar
+          sudo mv ranlib MinGW-replaced-ranlib
+          sudo mv strip MinGW-replaced-strip
+      - name: Normalize names of used MinGW binaries
+        shell: bash
+        run: |
+          cd /usr/bin
+          sudo ln -s i686-w64-mingw32-g++-win32 g++
+          sudo ln -s i686-w64-mingw32-gcc-win32 gcc
+          sudo ln -s i686-w64-mingw32-ar ar
+          sudo ln -s i686-w64-mingw32-ranlib ranlib
+          sudo ln -s i686-w64-mingw32-strip strip
+          sudo ln -s i686-w64-mingw32-windres windres
+
+  build:
+    name: build
+    needs: install
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Build it (and they will come)
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE
+          CROSS=i686-w64-mingw32-
+          make -C wscite/scintilla/win32 CXX=${CROSS}c++-win32 WINDRES=${CROSS}windres AR=${CROSS}ar RANLIB=${CROSS}ranlib
+          make -C wscite/scite/win32 CXX=${CROSS}c++-win32 CC=${CROSS}gcc-win32 WINDRES=${CROSS}windres
+
+  distprep2:
+    name: distprep2
+    needs: build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Prepare artifact from build product
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE
+          rm wscite/scite/bin/empty.txt
+          cp wscite/scite/doc/* wscite/scite/bin/
+          cp wscite/scite/License.txt wscite/scite/bin/
+          cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
+          mv wscite/scite/bin/* dist/*/wscite/
+
+  upload:
+    name: upload
+    needs: distprep2
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Derive artifact name
+        shell: bash
+        run: |
+          DIST_DIR_NAME=`/bin/ls $GITHUB_WORKSPACE/dist/`
+          echo "::set-env name=DIST_DIR_NAME::$DIST_DIR_NAME"
+      - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: wscite32_443-mod
-          path: ~/wscite32_443-mod
+          name: ${{ env.DIST_DIR_NAME }}
+          path: $GITHUB_WORKSPACE/dist/*

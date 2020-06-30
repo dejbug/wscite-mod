@@ -18,10 +18,10 @@ jobs:
     name: build1 - Checkout via uses-action
     needs: install
     runs-on: ubuntu-18.04
-    - uses: actions/checkout@v2
-      with:
-        lfs: true
     steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
       - shell: bash
         run: |
           echo $GITHUB_WORKSPACE

@@ -6,8 +6,8 @@ on:
 
 jobs:
 
-  build:
-    name: build
+  main:
+    name: main
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -29,6 +29,14 @@ jobs:
         run: |
           sudo apt-get install mingw-w64
           ls -1 /usr/bin | grep -i mingw
+      - name: Install upx
+        shell: bash
+        run: |
+        #  curl -kLO https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz
+        #  sudo apt install xz-utils
+        #  tar -xf upx-3.96-amd64_linux.tar.xz
+        #  sudo cp upx /usr/bin
+        upx --version
       - name: Backup binaries to be replaced by MinGW (just in case)
         shell: bash
         run: |
@@ -55,15 +63,24 @@ jobs:
           make -C wscite/scintilla/win32 CXX=${CROSS}c++-win32 WINDRES=${CROSS}windres AR=${CROSS}ar RANLIB=${CROSS}ranlib
           make -C wscite/scite/win32 CXX=${CROSS}c++-win32 CC=${CROSS}gcc-win32 WINDRES=${CROSS}windres
           ls wscite/scite/bin/
+      - name: Cut the crap (and they might not regret it)
+        shell: bash
+        run: |
+          strip wscite/scite/bin/Sc1.exe
+          upx --brute wscite/scite/bin/Sc1.exe
       - name: Prepare artifact from build product
         shell: bash
         run: |
-          rm wscite/scite/bin/empty.txt
-          cp wscite/scite/doc/* wscite/scite/bin/
-          cp wscite/scite/License.txt wscite/scite/bin/
-          cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
-          mv wscite/scite/bin/* dist/*/wscite/
-          ls dist/*/wscite/
+        #  rm wscite/scite/bin/empty.txt
+        #  cp wscite/scite/doc/* wscite/scite/bin/
+        #  cp wscite/scite/License.txt wscite/scite/bin/
+        #  cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
+        #  mv wscite/scite/bin/* dist/*/wscite/
+        #  ls dist/*/wscite/
+        cp wscite/scite/License.txt dist/*/wscite/
+        cp wscite/scite/lua/COPYRIGHT dist/*/wscite/luaCOPYRIGHT
+        cp wscite/scite/bin/Sc1.exe dist/*/wscite/
+        cp wscite/scite/bin/*.properties dist/*/wscite/
       - name: Derive artifact name
         shell: bash
         run: |

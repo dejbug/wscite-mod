@@ -6,8 +6,8 @@ on:
 
 jobs:
 
-  clone:
-    name: clone
+  build:
+    name: build
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -17,16 +17,19 @@ jobs:
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE
-          ls .
-          VERSION_SCITE=`awk '/VERSION_SCITE/ { gsub(/[^0-9]/, "", $3); print $3 }' $GITHUB_WORKSPACE/wscite/scite/src/SciTE.h`
+          VERSION_SCITE=`awk '/VERSION_SCITE/ { gsub(/[^0-9]/, "", $3); print $3 }' wscite/scite/src/SciTE.h`
+          echo VERSION_SCITE: $VERSION_SCITE
           DIST_DIR_NAME=wscite32_${VERSION_SCITE}-mod
-          mkdir -p $GITHUB_WORKSPACE/dist/$DIST_DIR_NAME/wscite
+          echo DIST_DIR_NAME: $DIST_DIR_NAME
+          mkdir -p dist/$DIST_DIR_NAME/wscite
+          ls dist/
+          ls dist/*/
       - name: Install MinGW and list its binaries
         shell: bash
         run: |
           sudo apt-get install mingw-w64
           ls -1 /usr/bin | grep -i mingw
-      - name: Backup binaries to be replaced by MinGW
+      - name: Backup binaries to be replaced by MinGW (just in case)
         shell: bash
         run: |
           cd /usr/bin
@@ -35,7 +38,7 @@ jobs:
           sudo mv ar MinGW-replaced-ar
           sudo mv ranlib MinGW-replaced-ranlib
           sudo mv strip MinGW-replaced-strip
-      - name: Normalize names of used MinGW binaries
+      - name: Normalize names of used MinGW binaries (just in case)
         shell: bash
         run: |
           cd /usr/bin
@@ -48,26 +51,30 @@ jobs:
       - name: Build it (and they will come)
         shell: bash
         run: |
-          cd $GITHUB_WORKSPACE
           CROSS=i686-w64-mingw32-
           make -C wscite/scintilla/win32 CXX=${CROSS}c++-win32 WINDRES=${CROSS}windres AR=${CROSS}ar RANLIB=${CROSS}ranlib
           make -C wscite/scite/win32 CXX=${CROSS}c++-win32 CC=${CROSS}gcc-win32 WINDRES=${CROSS}windres
+          ls wscite/scite/bin/
       - name: Prepare artifact from build product
         shell: bash
         run: |
-          cd $GITHUB_WORKSPACE
           rm wscite/scite/bin/empty.txt
           cp wscite/scite/doc/* wscite/scite/bin/
           cp wscite/scite/License.txt wscite/scite/bin/
           cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
           mv wscite/scite/bin/* dist/*/wscite/
+          ls dist/*/wscite/
       - name: Derive artifact name
         shell: bash
         run: |
           DIST_DIR_NAME=`/bin/ls $GITHUB_WORKSPACE/dist/`
+          echo DIST_DIR_NAME: $DIST_DIR_NAME
+          DIST_DIR_PATH=$GITHUB_WORKSPACE/dist/$DIST_DIR_NAME
+          echo DIST_DIR_PATH: $DIST_DIR_PATH
           echo "::set-env name=DIST_DIR_NAME::$DIST_DIR_NAME"
+          echo "::set-env name=DIST_DIR_PATH::$DIST_DIR_PATH"
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.DIST_DIR_NAME }}
-          path: $GITHUB_WORKSPACE/dist/*
+          path: ${{ env.DIST_DIR_PATH }}

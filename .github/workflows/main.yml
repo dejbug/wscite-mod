@@ -15,9 +15,10 @@ jobs:
 
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     # - uses: actions/checkout@v2
-
-    - name: Run a multi-line script
-      run: |
-        echo pwd
-        echo ls -la
-        echo sudo apt-get search mingw
+    steps:
+      - name: Print dir info
+        run: |
+          echo pwd
+          echo ls -la
+      - name: See if mingw is installable
+        run: echo sudo apt-get search mingw

@@ -13,12 +13,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           lfs: true
-
-  distprep1:
-    name: distprep1
-    needs: clone
-    runs-on: ubuntu-18.04
-    steps:
       - name: Make dist folder from SciTE version
         shell: bash
         run: |
@@ -27,12 +21,6 @@ jobs:
           VERSION_SCITE=`awk '/VERSION_SCITE/ { gsub(/[^0-9]/, "", $3); print $3 }' $GITHUB_WORKSPACE/wscite/scite/src/SciTE.h`
           DIST_DIR_NAME=wscite32_${VERSION_SCITE}-mod
           mkdir -p $GITHUB_WORKSPACE/dist/$DIST_DIR_NAME/wscite
-
-  install:
-    name: install
-    needs: distprep1
-    runs-on: ubuntu-18.04
-    steps:
       - name: Install MinGW and list its binaries
         shell: bash
         run: |
@@ -57,12 +45,6 @@ jobs:
           sudo ln -s i686-w64-mingw32-ranlib ranlib
           sudo ln -s i686-w64-mingw32-strip strip
           sudo ln -s i686-w64-mingw32-windres windres
-
-  build:
-    name: build
-    needs: install
-    runs-on: ubuntu-18.04
-    steps:
       - name: Build it (and they will come)
         shell: bash
         run: |
@@ -70,12 +52,6 @@ jobs:
           CROSS=i686-w64-mingw32-
           make -C wscite/scintilla/win32 CXX=${CROSS}c++-win32 WINDRES=${CROSS}windres AR=${CROSS}ar RANLIB=${CROSS}ranlib
           make -C wscite/scite/win32 CXX=${CROSS}c++-win32 CC=${CROSS}gcc-win32 WINDRES=${CROSS}windres
-
-  distprep2:
-    name: distprep2
-    needs: build
-    runs-on: ubuntu-18.04
-    steps:
       - name: Prepare artifact from build product
         shell: bash
         run: |
@@ -85,12 +61,6 @@ jobs:
           cp wscite/scite/License.txt wscite/scite/bin/
           cp wscite/scite/lua/COPYRIGHT wscite/scite/bin/luaCOPYRIGHT
           mv wscite/scite/bin/* dist/*/wscite/
-
-  upload:
-    name: upload
-    needs: distprep2
-    runs-on: ubuntu-18.04
-    steps:
       - name: Derive artifact name
         shell: bash
         run: |
